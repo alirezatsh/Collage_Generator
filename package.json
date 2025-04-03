@@ -2,15 +2,14 @@
   "name": "collage_generator",
   "version": "1.0.0",
   "description": "",
-  "main": "index.js",
- "scripts": {
-  "build": "tsc",
-  "start": "node dist/index.js",
-  "dev": "ts-node src/index.ts",
-  "lint": "eslint src --fix",
-  "format": "prettier --write src"
-},
-
+  "main": "app.js",
+  "scripts": {
+    "build": "tsc",
+    "start": "node dist/app.js",
+    "dev": "nodemon --ext ts --exec ts-node src/server.ts",
+    "lint": "eslint src --fix",
+    "format": "prettier --write src"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
@@ -21,6 +20,7 @@
     "mongoose": "^8.13.1"
   },
   "devDependencies": {
+    "@types/express": "^5.0.1",
     "@types/node": "^22.14.0",
     "@typescript-eslint/eslint-plugin": "^8.29.0",
     "@typescript-eslint/parser": "^8.29.0",

@@ -1,28 +1,28 @@
-// eslint.config.js
-import js from '@eslint/js';
-import tseslint from '@typescript-eslint/eslint-plugin';
-import tsparser from '@typescript-eslint/parser';
-import prettier from 'eslint-plugin-prettier';
-import prettierConfig from 'eslint-config-prettier';
+import js from "@eslint/js";
+import tseslint from "@typescript-eslint/eslint-plugin";
+import tsparser from "@typescript-eslint/parser";
+import prettier from "eslint-plugin-prettier";
+import prettierConfig from "eslint-config-prettier";
 
 export default [
   js.configs.recommended,
   {
-    files: ['**/*.ts'],
+    files: ["**/*.ts"],
     languageOptions: {
       parser: tsparser,
-      sourceType: 'module'
+      sourceType: "module",
     },
     plugins: {
-      '@typescript-eslint': tseslint,
-      prettier: prettier
+      "@typescript-eslint": tseslint,
+      prettier: prettier,
     },
     rules: {
       ...tseslint.configs.recommended.rules,
       ...prettierConfig.rules,
-      'prettier/prettier': 'error',
-      '@typescript-eslint/no-unused-vars': 'warn',
-      'no-console': 'off'
-    }
-  }
+      "prettier/prettier": "error",
+      "@typescript-eslint/no-unused-vars": "warn",
+      "no-console": "off", 
+      "@typescript-eslint/no-explicit-any": "off",
+    },
+  },
 ];
