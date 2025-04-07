@@ -8,7 +8,7 @@ import {
 
 const router = Router();
 
-router.post('/', createCollageRequest);
+router.post('/upload', createCollageRequest);
 router.get('/', getCollageRequests);
 router.get('/:id', getCollageRequestById);
 router.delete('/:id', deleteCollageRequest);
