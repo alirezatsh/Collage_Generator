@@ -5,7 +5,7 @@ export interface IRequest extends Document {
   collageType: 'horizontal' | 'vertical';
   borderSize: number;
   borderColor: string;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED';
+  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   resultUrl?: string;
   createdAt: Date;
 }
@@ -22,7 +22,7 @@ const RequestSchema: Schema = new Schema(
     borderColor: { type: String, default: '#FFFFFF' },
     status: {
       type: String,
-      enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'],
+      enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'],
       default: 'PENDING',
     },
     resultUrl: { type: String },
@@ -30,5 +30,5 @@ const RequestSchema: Schema = new Schema(
   { timestamps: true }
 );
 
-const RequestModel = mongoose.model('Request', RequestSchema);
+const RequestModel = mongoose.model<IRequest>('Request', RequestSchema);
 export default RequestModel;

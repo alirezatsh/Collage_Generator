@@ -45,7 +45,7 @@ const RequestSchema = new mongoose_1.Schema({
     borderColor: { type: String, default: '#FFFFFF' },
     status: {
         type: String,
-        enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED'],
+        enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'],
         default: 'PENDING',
     },
     resultUrl: { type: String },
