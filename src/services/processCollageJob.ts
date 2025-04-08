@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import createCollage from '../controllers/collageCreator';
-import uploadToLiara from '../services/imageuploader';
 import generateDownloadLink from '../services/getdownloadlink';
 import { randomUUID } from 'crypto';
+import uploadToLiara from '../services/uploadCollageToS3';
 
 const processCollageJob = async (
   images: string[],

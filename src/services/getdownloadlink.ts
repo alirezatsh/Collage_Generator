@@ -16,9 +16,11 @@ const generateDownloadLink = async (filename: string): Promise<string> => {
     },
   });
 
+  const fileKey = `collages/${filename}`;
+
   const params = {
     Bucket: process.env.LIARA_BUCKET_NAME!,
-    Key: filename,
+    Key: fileKey,
   };
 
   const command = new GetObjectCommand(params);
