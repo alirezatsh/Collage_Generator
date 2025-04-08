@@ -1,23 +1,20 @@
 /* eslint-disable no-undef */
 import { Worker, Job } from 'bullmq';
-import redisConfig from '../config/redisconfig'; // کانفیگ Redis که نوشتی
-import { createCollage } from './collagemaker'; // تابعی که برای پردازش کلاژ ایجاد می‌کنیم
+import redisConfig from '../config/redisconfig';
+import processCollageJob from './processCollageJob';
 
-// ایجاد Worker برای پردازش کلاژها
 const collageWorker = new Worker(
   'collageQueue',
   async (job: Job) => {
     const { images, collageType, borderSize, borderColor } = job.data;
     console.log(`Processing collage for job: ${job.id}`);
 
-    // پردازش کلاژ
-    const resultUrl = await createCollage(
+    const { resultUrl } = await processCollageJob(
       images,
       collageType,
       borderSize,
       borderColor
     );
-
     return { resultUrl };
   },
   {
@@ -27,7 +24,7 @@ const collageWorker = new Worker(
 
 collageWorker.on('completed', (job, result) => {
   if (job) {
-    console.log(`Job ${job.id} completed! Result: ${result}`);
+    console.log(`Job ${job.id} completed! Result: ${JSON.stringify(result)}`);
   } else {
     console.log('Job is undefined!');
   }

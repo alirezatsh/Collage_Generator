@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import connectToDb from './config/db';
 import imageRoutes from './routes/imageroute';
+import '../src/services/collageworker';
 
 const app = express();
 

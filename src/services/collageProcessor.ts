@@ -7,6 +7,4 @@ export const createCollage = async (
   borderColor: string
 ) => {
   console.log(`Creating collage with ${collageType} layout`);
-
-  return 'https://example.com/collage-result.jpg';
 };

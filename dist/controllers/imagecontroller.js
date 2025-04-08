@@ -3,9 +3,10 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.cancelCollageRequest = exports.getCollageStatus = exports.uploadImages = void 0;
+exports.cancelCollageRequest = exports.getCollageStatus = exports.getAllRequests = exports.uploadImages = void 0;
 const request_1 = __importDefault(require("../models/request"));
 const collagequeue_1 = __importDefault(require("../services/collagequeue"));
+const imageuploader_1 = __importDefault(require("../services/imageuploader"));
 const uploadImages = async (req, res) => {
     try {
         const files = req.files;
@@ -14,8 +15,15 @@ const uploadImages = async (req, res) => {
             res.status(400).json({ message: 'Exactly 3 images are required' });
             return;
         }
+        const uploadedImages = [];
+        for (const file of files) {
+            const fileName = file.originalname;
+            const fileBuffer = file.buffer;
+            const uploadedUrl = await (0, imageuploader_1.default)(fileBuffer, fileName);
+            uploadedImages.push(uploadedUrl);
+        }
         const newRequest = new request_1.default({
-            images: files.map((file) => file.originalname),
+            images: uploadedImages,
             collageType,
             borderSize,
             borderColor,
@@ -41,6 +49,33 @@ const uploadImages = async (req, res) => {
     }
 };
 exports.uploadImages = uploadImages;
+const getAllRequests = async (req, res) => {
+    try {
+        const requests = await request_1.default.find();
+        if (requests.length === 0) {
+            res.status(200).json({ message: 'No requests found', data: [] });
+            return;
+        }
+        res.status(200).json({
+            message: 'Requests fetched successfully',
+            data: requests,
+        });
+    }
+    catch (error) {
+        if (error instanceof Error) {
+            res
+                .status(500)
+                .json({ message: 'Error fetching requests', error: error.message });
+        }
+        else {
+            res.status(500).json({
+                message: 'Error fetching requests',
+                error: 'An unknown error occurred',
+            });
+        }
+    }
+};
+exports.getAllRequests = getAllRequests;
 const getCollageStatus = async (req, res) => {
     const { requestId } = req.params;
     try {

@@ -1,7 +1,10 @@
 /* eslint-disable no-undef */
 import { Request, Response } from 'express';
 import RequestModel from '../models/request';
-import collageQueue from '../services/collagequeue'; // فرض کنید این وظیفه صف کلاژ است
+import collageQueue from '../services/collagequeue';
+import uploadFileToLiara from '../services/imageuploader'; // Import the Liara upload service
+import generateDownloadLink from '../services/getdownloadlink';
+import createCollage from './collageCreator';
 
 export const uploadImages = async (
   req: Request,
@@ -16,18 +19,26 @@ export const uploadImages = async (
       return;
     }
 
-    // ذخیره درخواست جدید در دیتابیس
+    const uploadedImages: string[] = [];
+
+    for (const file of files) {
+      const fileName = file.originalname; // Using the original file name
+      const fileBuffer = file.buffer; // Getting the file buffer from the uploaded file
+
+      const uploadedUrl = await uploadFileToLiara(fileBuffer, fileName);
+      uploadedImages.push(uploadedUrl);
+    }
+
     const newRequest = new RequestModel({
-      images: files.map((file) => file.originalname),
+      images: uploadedImages,
       collageType,
       borderSize,
       borderColor,
-      status: 'PENDING', // وضعیت اولیه "PENDING"
+      status: 'PENDING',
     });
 
     await newRequest.save();
 
-    // اضافه کردن درخواست به صف
     await createCollageJob(newRequest);
 
     res.status(200).json({
@@ -42,6 +53,35 @@ export const uploadImages = async (
       res
         .status(500)
         .json({ message: 'Upload failed', error: 'An unknown error occurred' });
+    }
+  }
+};
+
+export const getAllRequests = async (
+  req: Request,
+  res: Response
+): Promise<void> => {
+  try {
+    const requests = await RequestModel.find();
+
+    if (requests.length === 0) {
+      res.status(200).json({ message: 'No requests found', data: [] });
+      return;
+    }
+    res.status(200).json({
+      message: 'Requests fetched successfully',
+      data: requests,
+    });
+  } catch (error: unknown) {
+    if (error instanceof Error) {
+      res
+        .status(500)
+        .json({ message: 'Error fetching requests', error: error.message });
+    } else {
+      res.status(500).json({
+        message: 'Error fetching requests',
+        error: 'An unknown error occurred',
+      });
     }
   }
 };
@@ -93,7 +133,6 @@ export const cancelCollageRequest = async (
       return;
     }
 
-    // درخواست‌هایی که پردازش شده‌اند قابل لغو نیستند
     if (request.status === 'COMPLETED' || request.status === 'FAILED') {
       res
         .status(400)
@@ -101,12 +140,10 @@ export const cancelCollageRequest = async (
       return;
     }
 
-    // تغییر وضعیت درخواست به "CANCELLED"
     request.status = 'CANCELLED';
     await request.save();
 
-    // لغو Job از صف
-    await cancelCollageJob(request._id as string); // تایید نوع به عنوان string
+    await cancelCollageJob(request._id as string);
 
     res.status(200).json({ message: 'Request cancelled successfully' });
   } catch (error: unknown) {
@@ -123,23 +160,20 @@ export const cancelCollageRequest = async (
   }
 };
 
-// تابع ایجاد Job در صف برای پردازش کلاژ
 const createCollageJob = async (request: any): Promise<void> => {
   try {
     const { images, collageType, borderSize, borderColor } = request;
 
-    // ارسال Job به صف
     const job = await collageQueue.add('createCollage', {
       images,
       collageType,
       borderSize,
       borderColor,
-      requestId: request._id as string, // تایید نوع به عنوان string
+      requestId: request._id as string,
     });
 
-    console.log(`Job ${job.id} added to queue`); // استفاده از job
+    console.log(`Job ${job.id} added to queue`);
 
-    // به روزرسانی وضعیت درخواست به "PROCESSING"
     request.status = 'PROCESSING';
     await request.save();
   } catch (error: unknown) {
@@ -147,15 +181,13 @@ const createCollageJob = async (request: any): Promise<void> => {
   }
 };
 
-// تابع لغو Job از صف
 const cancelCollageJob = async (requestId: string): Promise<void> => {
   try {
-    // لغو Job از صف با شناسه درخواست
     const jobs = await collageQueue.getJobs(['waiting', 'active', 'delayed']);
 
     for (const job of jobs) {
       if (job.data.requestId === requestId) {
-        await job.remove(); // حذف Job از صف
+        await job.remove();
         console.log(`Job for request ${requestId} removed from queue`);
         break;
       }

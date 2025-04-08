@@ -22,11 +22,12 @@ const generateDownloadLink = async (filename) => {
     };
     const command = new client_s3_1.GetObjectCommand(params);
     try {
-        const url = await (0, s3_request_presigner_1.getSignedUrl)(client, command);
-        console.log(`Download URL: ${url}`);
+        const url = await (0, s3_request_presigner_1.getSignedUrl)(client, command, { expiresIn: 3600 });
+        return url;
     }
     catch (error) {
         console.error('Error generating signed URL:', error);
+        throw error;
     }
 };
 exports.default = generateDownloadLink;

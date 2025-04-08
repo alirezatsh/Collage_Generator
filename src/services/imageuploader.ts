@@ -33,7 +33,6 @@ const uploadFileToLiara = async (
   try {
     await client.send(new PutObjectCommand(params));
 
-    // پس از آپلود، URL تصویر را دریافت می‌کنیم.
     const url = await getSignedUrl(
       client,
       new GetObjectCommand({
@@ -44,7 +43,7 @@ const uploadFileToLiara = async (
     );
 
     console.log('Upload successful!');
-    return url; // URL مستقیم فایل
+    return url;
   } catch (error) {
     console.error('Upload failed:', error);
     throw new Error('Failed to upload file');

@@ -1,42 +1,71 @@
 /* eslint-disable no-undef */
 import sharp from 'sharp';
+import axios from 'axios';
 
 const createCollage = async (
   images: string[],
   collageType: 'horizontal' | 'vertical',
   borderSize: number,
   borderColor: string
-) => {
+): Promise<Buffer> => {
   try {
-    let collage = sharp({
+    const imageSize = 300;
+
+    const width =
+      collageType === 'horizontal'
+        ? borderSize + images.length * (imageSize + borderSize)
+        : imageSize + 2 * borderSize;
+
+    const height =
+      collageType === 'vertical'
+        ? borderSize + images.length * (imageSize + borderSize)
+        : imageSize + 2 * borderSize;
+
+    const backgroundBuffer = await sharp({
       create: {
-        width:
-          collageType === 'horizontal'
-            ? 3 * 300 + borderSize * 2
-            : 300 + borderSize * 2,
-        height:
-          collageType === 'vertical'
-            ? 3 * 300 + borderSize * 2
-            : 300 + borderSize * 2,
+        width,
+        height,
         channels: 3,
         background: borderColor,
       },
-    });
+    })
+      .png()
+      .toBuffer();
 
-    for (let i = 0; i < images.length; i++) {
-      const image = sharp(images[i]);
-      collage = collage.composite([
-        {
-          input: await image.resize(300).toBuffer(),
-          top: collageType === 'vertical' ? i * 300 + borderSize : borderSize,
-          left:
-            collageType === 'horizontal' ? i * 300 + borderSize : borderSize,
-        },
-      ]);
-    }
+    const compositeImages = await Promise.all(
+      images.map(async (img, index) => {
+        const originalBuffer = await axios
+          .get(img, { responseType: 'arraybuffer' })
+          .then((res) => Buffer.from(res.data));
 
-    const outputBuffer = await collage.toBuffer();
-    return outputBuffer; // This buffer will be used for uploading
+        const resizedBuffer = await sharp(originalBuffer)
+          .resize(imageSize, imageSize)
+          .toBuffer();
+
+        const top =
+          collageType === 'vertical'
+            ? borderSize + index * (imageSize + borderSize)
+            : borderSize;
+
+        const left =
+          collageType === 'horizontal'
+            ? borderSize + index * (imageSize + borderSize)
+            : borderSize;
+
+        return {
+          input: resizedBuffer,
+          top,
+          left,
+        };
+      })
+    );
+
+    const finalCollage = await sharp(backgroundBuffer)
+      .composite(compositeImages)
+      .jpeg()
+      .toBuffer();
+
+    return finalCollage;
   } catch (error) {
     console.error('Error creating collage:', error);
     throw error;

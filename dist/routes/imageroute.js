@@ -13,4 +13,5 @@ router.post('/upload', upload.array('images', 3), imagecontroller_1.uploadImages
 router.get('/status/:requestId', imagecontroller_1.getCollageStatus);
 router.post('/cancel/:requestId', imagecontroller_1.cancelCollageRequest);
 router.get('/status/:jobId', requestcontroller_1.getJobStatus);
+router.get('/status', imagecontroller_1.getAllRequests);
 exports.default = router;

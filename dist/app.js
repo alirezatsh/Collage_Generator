@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
 const db_1 = __importDefault(require("./config/db"));
 const imageroute_1 = __importDefault(require("./routes/imageroute"));
+require("../src/services/collageworker");
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
 app.use('/api', imageroute_1.default);
