@@ -2,9 +2,45 @@
 import { Request, Response } from 'express';
 import RequestModel from '../models/request';
 import collageQueue from '../services/collagequeue';
-import uploadFileToLiara from '../services/imageuploader'; // Import the Liara upload service
-import generateDownloadLink from '../services/getdownloadlink';
-import createCollage from './collageCreator';
+import uploadFileToLiara from '../services/imageuploader';
+
+const createCollageJob = async (request: any): Promise<void> => {
+  try {
+    const { images, collageType, borderSize, borderColor, resultUrl } = request;
+
+    const job = await collageQueue.add('createCollage', {
+      images,
+      collageType,
+      borderSize,
+      borderColor,
+      resultUrl,
+      requestId: request._id as string,
+    });
+
+    console.log(`Job ${job.id} added to queue`);
+
+    request.status = 'PROCESSING';
+    await request.save();
+  } catch (error: unknown) {
+    console.error('Error adding job to queue:', error);
+  }
+};
+
+const cancelCollageJob = async (requestId: string): Promise<void> => {
+  try {
+    const jobs = await collageQueue.getJobs(['waiting', 'active', 'delayed']);
+
+    for (const job of jobs) {
+      if (job.data.requestId === requestId) {
+        await job.remove();
+        console.log(`Job for request ${requestId} removed from queue`);
+        break;
+      }
+    }
+  } catch (error: unknown) {
+    console.error('Error canceling job from queue:', error);
+  }
+};
 
 export const uploadImages = async (
   req: Request,
@@ -22,8 +58,8 @@ export const uploadImages = async (
     const uploadedImages: string[] = [];
 
     for (const file of files) {
-      const fileName = file.originalname; // Using the original file name
-      const fileBuffer = file.buffer; // Getting the file buffer from the uploaded file
+      const fileName = file.originalname;
+      const fileBuffer = file.buffer;
 
       const uploadedUrl = await uploadFileToLiara(fileBuffer, fileName);
       uploadedImages.push(uploadedUrl);
@@ -44,6 +80,8 @@ export const uploadImages = async (
     res.status(200).json({
       message: 'Images uploaded successfully and collage is being processed',
       requestId: newRequest._id,
+      status: newRequest.status,
+      resultUrl: newRequest.resultUrl, // فقط resultUrl ارسال میشه
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -64,13 +102,14 @@ export const getAllRequests = async (
   try {
     const requests = await RequestModel.find();
 
-    if (requests.length === 0) {
-      res.status(200).json({ message: 'No requests found', data: [] });
-      return;
-    }
+    const requestsWithResultUrl = requests.map((req) => ({
+      ...req.toObject(),
+      resultUrl: req.resultUrl, // فقط resultUrl رو اضافه می‌کنیم
+    }));
+
     res.status(200).json({
       message: 'Requests fetched successfully',
-      data: requests,
+      data: requestsWithResultUrl,
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -103,7 +142,7 @@ export const getCollageStatus = async (
     res.status(200).json({
       requestId: request._id,
       status: request.status,
-      resultUrl: request.resultUrl,
+      resultUrl: request.resultUrl, // فقط resultUrl رو ارسال می‌کنیم
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -157,42 +196,5 @@ export const cancelCollageRequest = async (
         error: 'An unknown error occurred',
       });
     }
-  }
-};
-
-const createCollageJob = async (request: any): Promise<void> => {
-  try {
-    const { images, collageType, borderSize, borderColor } = request;
-
-    const job = await collageQueue.add('createCollage', {
-      images,
-      collageType,
-      borderSize,
-      borderColor,
-      requestId: request._id as string,
-    });
-
-    console.log(`Job ${job.id} added to queue`);
-
-    request.status = 'PROCESSING';
-    await request.save();
-  } catch (error: unknown) {
-    console.error('Error adding job to queue:', error);
-  }
-};
-
-const cancelCollageJob = async (requestId: string): Promise<void> => {
-  try {
-    const jobs = await collageQueue.getJobs(['waiting', 'active', 'delayed']);
-
-    for (const job of jobs) {
-      if (job.data.requestId === requestId) {
-        await job.remove();
-        console.log(`Job for request ${requestId} removed from queue`);
-        break;
-      }
-    }
-  } catch (error: unknown) {
-    console.error('Error canceling job from queue:', error);
   }
 };

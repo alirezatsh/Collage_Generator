@@ -25,7 +25,7 @@ const createCollage = async (
       create: {
         width,
         height,
-        channels: 3,
+        channels: 4,
         background: borderColor,
       },
     })

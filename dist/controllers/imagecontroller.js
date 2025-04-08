@@ -7,6 +7,40 @@ exports.cancelCollageRequest = exports.getCollageStatus = exports.getAllRequests
 const request_1 = __importDefault(require("../models/request"));
 const collagequeue_1 = __importDefault(require("../services/collagequeue"));
 const imageuploader_1 = __importDefault(require("../services/imageuploader"));
+const createCollageJob = async (request) => {
+    try {
+        const { images, collageType, borderSize, borderColor, resultUrl } = request;
+        const job = await collagequeue_1.default.add('createCollage', {
+            images,
+            collageType,
+            borderSize,
+            borderColor,
+            resultUrl,
+            requestId: request._id,
+        });
+        console.log(`Job ${job.id} added to queue`);
+        request.status = 'PROCESSING';
+        await request.save();
+    }
+    catch (error) {
+        console.error('Error adding job to queue:', error);
+    }
+};
+const cancelCollageJob = async (requestId) => {
+    try {
+        const jobs = await collagequeue_1.default.getJobs(['waiting', 'active', 'delayed']);
+        for (const job of jobs) {
+            if (job.data.requestId === requestId) {
+                await job.remove();
+                console.log(`Job for request ${requestId} removed from queue`);
+                break;
+            }
+        }
+    }
+    catch (error) {
+        console.error('Error canceling job from queue:', error);
+    }
+};
 const uploadImages = async (req, res) => {
     try {
         const files = req.files;
@@ -34,6 +68,8 @@ const uploadImages = async (req, res) => {
         res.status(200).json({
             message: 'Images uploaded successfully and collage is being processed',
             requestId: newRequest._id,
+            status: newRequest.status,
+            resultUrl: newRequest.resultUrl,
         });
     }
     catch (error) {
@@ -52,13 +88,13 @@ exports.uploadImages = uploadImages;
 const getAllRequests = async (req, res) => {
     try {
         const requests = await request_1.default.find();
-        if (requests.length === 0) {
-            res.status(200).json({ message: 'No requests found', data: [] });
-            return;
-        }
+        const requestsWithResultUrl = requests.map((req) => ({
+            ...req.toObject(),
+            resultUrl: req.resultUrl,
+        }));
         res.status(200).json({
             message: 'Requests fetched successfully',
-            data: requests,
+            data: requestsWithResultUrl,
         });
     }
     catch (error) {
@@ -139,36 +175,3 @@ const cancelCollageRequest = async (req, res) => {
     }
 };
 exports.cancelCollageRequest = cancelCollageRequest;
-const createCollageJob = async (request) => {
-    try {
-        const { images, collageType, borderSize, borderColor } = request;
-        const job = await collagequeue_1.default.add('createCollage', {
-            images,
-            collageType,
-            borderSize,
-            borderColor,
-            requestId: request._id,
-        });
-        console.log(`Job ${job.id} added to queue`);
-        request.status = 'PROCESSING';
-        await request.save();
-    }
-    catch (error) {
-        console.error('Error adding job to queue:', error);
-    }
-};
-const cancelCollageJob = async (requestId) => {
-    try {
-        const jobs = await collagequeue_1.default.getJobs(['waiting', 'active', 'delayed']);
-        for (const job of jobs) {
-            if (job.data.requestId === requestId) {
-                await job.remove();
-                console.log(`Job for request ${requestId} removed from queue`);
-                break;
-            }
-        }
-    }
-    catch (error) {
-        console.error('Error canceling job from queue:', error);
-    }
-};
