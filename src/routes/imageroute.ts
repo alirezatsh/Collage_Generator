@@ -12,9 +12,9 @@ const router = express.Router();
 const upload = multer();
 
 router.post('/upload', upload.array('images', 3), uploadImages);
-router.get('/status/:requestId', getCollageStatus);
+router.get('/collages/:requestId', getCollageStatus);
 router.post('/cancel/:requestId', cancelCollageRequest);
-router.get('/status/:jobId', getJobStatus);
-router.get('/status', getAllRequests);
+router.get('/collages/:jobId', getJobStatus);
+router.get('/collages', getAllRequests);
 
 export default router;
