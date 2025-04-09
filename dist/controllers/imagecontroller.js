@@ -9,12 +9,12 @@ const collagequeue_1 = __importDefault(require("../services/collagequeue"));
 const imageuploader_1 = __importDefault(require("../services/imageuploader"));
 const createCollageJob = async (request) => {
     try {
-        const { images, collageType, borderSize, borderColor, resultUrl } = request;
+        const { images, collageType, borderSize, backgroundColor, resultUrl } = request;
         const job = await collagequeue_1.default.add('createCollage', {
             images,
             collageType,
             borderSize,
-            borderColor,
+            backgroundColor,
             resultUrl,
             requestId: request._id,
         });
@@ -44,7 +44,7 @@ const cancelCollageJob = async (requestId) => {
 const uploadImages = async (req, res) => {
     try {
         const files = req.files;
-        const { collageType, borderSize, borderColor } = req.body;
+        const { collageType, borderSize, backgroundColor } = req.body;
         if (!files || files.length !== 3) {
             res.status(400).json({ message: 'Exactly 3 images are required' });
             return;
@@ -60,7 +60,7 @@ const uploadImages = async (req, res) => {
             images: uploadedImages,
             collageType,
             borderSize,
-            borderColor,
+            backgroundColor,
             status: 'PENDING',
         });
         await newRequest.save();

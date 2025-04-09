@@ -5,12 +5,12 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.cancelCollageRequest = exports.getCollageStatus = exports.getAllRequests = exports.uploadImages = void 0;
 const request_1 = __importDefault(require("../models/request"));
-const collagequeue_1 = __importDefault(require("../queue/collagequeue"));
+const collageQueue_1 = __importDefault(require("../queue/collageQueue"));
 const uploadImagesToS3_1 = __importDefault(require("../objectStorage/uploadImagesToS3"));
 const createCollageJob = async (request) => {
     try {
         const { images, collageType, borderSize, backgroundColor, resultUrl } = request;
-        const job = await collagequeue_1.default.add('createCollage', {
+        const job = await collageQueue_1.default.add('createCollage', {
             images,
             collageType,
             borderSize,
@@ -28,7 +28,7 @@ const createCollageJob = async (request) => {
 };
 const cancelCollageJob = async (requestId) => {
     try {
-        const jobs = await collagequeue_1.default.getJobs(['waiting', 'active', 'delayed']);
+        const jobs = await collageQueue_1.default.getJobs(['waiting', 'active', 'delayed']);
         for (const job of jobs) {
             if (job.data.requestId === requestId) {
                 await job.remove();

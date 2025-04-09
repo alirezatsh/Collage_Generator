@@ -8,9 +8,9 @@ const redisconfig_1 = __importDefault(require("../config/redisconfig"));
 const processCollageJob_1 = __importDefault(require("./processCollageJob"));
 const request_1 = __importDefault(require("../models/request"));
 const collageWorker = new bullmq_1.Worker('collageQueue', async (job) => {
-    const { images, collageType, borderSize, borderColor, requestId } = job.data;
+    const { images, collageType, borderSize, backgroundColor, requestId } = job.data;
     console.log(`Processing collage for job: ${job.id}`);
-    const { resultUrl } = await (0, processCollageJob_1.default)(images, collageType, borderSize, borderColor);
+    const { resultUrl } = await (0, processCollageJob_1.default)(images, collageType, borderSize, backgroundColor);
     const request = await request_1.default.findById(requestId);
     if (request) {
         request.status = 'COMPLETED';

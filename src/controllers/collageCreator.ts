@@ -6,7 +6,7 @@ const createCollage = async (
   images: string[],
   collageType: 'horizontal' | 'vertical',
   borderSize: number,
-  borderColor: string
+  backgroundColor: string
 ): Promise<Buffer> => {
   try {
     const imageSize = 300;
@@ -26,7 +26,7 @@ const createCollage = async (
         width,
         height,
         channels: 4,
-        background: borderColor,
+        background: backgroundColor,
       },
     })
       .png()

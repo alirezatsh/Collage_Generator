@@ -1,13 +1,13 @@
 /* eslint-disable no-undef */
 import { Worker, Job } from 'bullmq';
-import redisConfig from '../config/redisconfig';
+import redisConfig from '../config/redisConfig';
 import processCollageJob from './processCollageJob';
 import RequestModel from '../models/request';
 
 const collageWorker = new Worker(
   'collageQueue',
   async (job: Job) => {
-    const { images, collageType, borderSize, borderColor, requestId } =
+    const { images, collageType, borderSize, backgroundColor, requestId } =
       job.data;
     console.log(`Processing collage for job: ${job.id}`);
 
@@ -15,7 +15,7 @@ const collageWorker = new Worker(
       images,
       collageType,
       borderSize,
-      borderColor
+      backgroundColor
     );
 
     const request = await RequestModel.findById(requestId);

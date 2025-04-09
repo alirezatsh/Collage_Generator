@@ -4,16 +4,16 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", { value: true });
 const express_1 = __importDefault(require("express"));
-const db_1 = __importDefault(require("./config/db"));
-const imageroute_1 = __importDefault(require("./routes/imageroute"));
-require("../src/services/collageworker");
-const deleteoldfiles_1 = require("./services/deleteoldfiles");
-(0, deleteoldfiles_1.deleteOldFiles)();
+const mongodbConfig_1 = __importDefault(require("./src/config/mongodbConfig"));
+const requestRoute_1 = __importDefault(require("./src/routes/requestRoute"));
+require("./src/queue/collageWorker");
+const deleteOldFiles_1 = require("./src/objectStorage/deleteOldFiles");
+(0, deleteOldFiles_1.deleteOldFiles)();
 const app = (0, express_1.default)();
 app.use(express_1.default.json());
-app.use('/api', imageroute_1.default);
+app.use('/api', requestRoute_1.default);
 app.get('/', (req, res) => {
     res.send('Collage Generator API is running 🚀');
 });
-(0, db_1.default)();
+(0, mongodbConfig_1.default)();
 exports.default = app;

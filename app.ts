@@ -1,8 +1,8 @@
 import express, { Request, Response } from 'express';
-import connectToDb from './config/db';
-import imageRoutes from './routes/imageroute';
-import '../src/services/collageworker';
-import { deleteOldFiles } from './services/deleteoldfiles';
+import connectToDb from './src/config/mongodbConfig';
+import imageRoutes from './src/routes/requestRoute';
+import './src/queue/collageWorker';
+import { deleteOldFiles } from './src/objectStorage/deleteOldFiles';
 
 deleteOldFiles();
 
