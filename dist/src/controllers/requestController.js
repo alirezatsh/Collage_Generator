@@ -45,8 +45,8 @@ const uploadImages = async (req, res) => {
     try {
         const files = req.files;
         const { collageType, borderSize, backgroundColor } = req.body;
-        if (!files || files.length !== 3) {
-            res.status(400).json({ message: 'Exactly 3 images are required' });
+        if (!files || files.length < 2) {
+            res.status(400).json({ message: 'At least 2 images are required' });
             return;
         }
         const uploadedImages = [];

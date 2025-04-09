@@ -7,7 +7,6 @@ export interface IRequest extends Document {
   backgroundColor: string;
   status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   resultUrl?: string;
-  createdAt: Date;
 }
 
 const RequestSchema: Schema = new Schema(
@@ -25,7 +24,7 @@ const RequestSchema: Schema = new Schema(
       enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'],
       default: 'PENDING',
     },
-    resultUrl: { type: String },
+    resultUrl: { type: String, default: null },
   },
   { timestamps: true }
 );

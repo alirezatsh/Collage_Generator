@@ -8,6 +8,8 @@ const createCollage = async (
   borderSize: number,
   backgroundColor: string
 ): Promise<Buffer> => {
+  const startTime = performance.now();
+
   try {
     const imageSize = 300;
 
@@ -64,6 +66,10 @@ const createCollage = async (
       .composite(compositeImages)
       .jpeg()
       .toBuffer();
+
+    const endTime = performance.now();
+    const elapsedTime = endTime - startTime;
+    console.log(`Collage creation took ${elapsedTime} ms`);
 
     return finalCollage;
   } catch (error) {

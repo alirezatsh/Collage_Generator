@@ -6,6 +6,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const sharp_1 = __importDefault(require("sharp"));
 const axios_1 = __importDefault(require("axios"));
 const createCollage = async (images, collageType, borderSize, backgroundColor) => {
+    const startTime = performance.now();
     try {
         const imageSize = 300;
         const width = collageType === 'horizontal'
@@ -47,6 +48,9 @@ const createCollage = async (images, collageType, borderSize, backgroundColor) =
             .composite(compositeImages)
             .jpeg()
             .toBuffer();
+        const endTime = performance.now();
+        const elapsedTime = endTime - startTime;
+        console.log(`Collage creation took ${elapsedTime} ms`);
         return finalCollage;
     }
     catch (error) {

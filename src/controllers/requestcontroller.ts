@@ -4,6 +4,7 @@ import RequestModel from '../models/request';
 import collageQueue from '../queue/collageQueue';
 import uploadFileToLiara from '../objectStorage/uploadImagesToS3';
 
+// create a collage job
 const createCollageJob = async (request: any): Promise<void> => {
   try {
     const { images, collageType, borderSize, backgroundColor, resultUrl } =
@@ -27,6 +28,7 @@ const createCollageJob = async (request: any): Promise<void> => {
   }
 };
 
+// cancel a collagejob
 const cancelCollageJob = async (requestId: string): Promise<void> => {
   try {
     const jobs = await collageQueue.getJobs(['waiting', 'active', 'delayed']);
@@ -43,6 +45,7 @@ const cancelCollageJob = async (requestId: string): Promise<void> => {
   }
 };
 
+// upload images into liara bucket
 export const uploadImages = async (
   req: Request,
   res: Response
@@ -51,8 +54,8 @@ export const uploadImages = async (
     const files = req.files as Express.Multer.File[];
     const { collageType, borderSize, backgroundColor } = req.body;
 
-    if (!files || files.length !== 3) {
-      res.status(400).json({ message: 'Exactly 3 images are required' });
+    if (!files || files.length < 2) {
+      res.status(400).json({ message: 'At least 2 images are required' });
       return;
     }
 
@@ -82,7 +85,7 @@ export const uploadImages = async (
       message: 'Images uploaded successfully and collage is being processed',
       requestId: newRequest._id,
       status: newRequest.status,
-      resultUrl: newRequest.resultUrl, // فقط resultUrl ارسال میشه
+      resultUrl: newRequest.resultUrl,
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -96,6 +99,7 @@ export const uploadImages = async (
   }
 };
 
+// get all requests
 export const getAllRequests = async (
   req: Request,
   res: Response
@@ -105,7 +109,7 @@ export const getAllRequests = async (
 
     const requestsWithResultUrl = requests.map((req) => ({
       ...req.toObject(),
-      resultUrl: req.resultUrl, // فقط resultUrl رو اضافه می‌کنیم
+      resultUrl: req.resultUrl,
     }));
 
     res.status(200).json({
@@ -126,6 +130,7 @@ export const getAllRequests = async (
   }
 };
 
+// get a single request base on id
 export const getCollageStatus = async (
   req: Request,
   res: Response
@@ -143,7 +148,7 @@ export const getCollageStatus = async (
     res.status(200).json({
       requestId: request._id,
       status: request.status,
-      resultUrl: request.resultUrl, // فقط resultUrl رو ارسال می‌کنیم
+      resultUrl: request.resultUrl,
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
@@ -159,6 +164,7 @@ export const getCollageStatus = async (
   }
 };
 
+// cancel a collagerequest in pending status
 export const cancelCollageRequest = async (
   req: Request,
   res: Response

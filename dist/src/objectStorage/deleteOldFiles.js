@@ -5,7 +5,6 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.deleteOldFiles = void 0;
 const client_s3_1 = require("@aws-sdk/client-s3");
-const node_cron_1 = __importDefault(require("node-cron"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const client = new client_s3_1.S3Client({
@@ -50,8 +49,3 @@ const deleteOldFiles = async () => {
     }
 };
 exports.deleteOldFiles = deleteOldFiles;
-node_cron_1.default.schedule('0 0 * * *', async () => {
-    console.log('Running task to delete old files...');
-    await (0, exports.deleteOldFiles)();
-    process.exit(0);
-});

@@ -57,9 +57,3 @@ export const deleteOldFiles = async (): Promise<void> => {
     console.error('Error deleting old files:', error);
   }
 };
-
-cron.schedule('0 0 * * *', async () => {
-  console.log('Running task to delete old files...');
-  await deleteOldFiles();
-  process.exit(0);
-});

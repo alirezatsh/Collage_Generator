@@ -48,7 +48,7 @@ const RequestSchema = new mongoose_1.Schema({
         enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'],
         default: 'PENDING',
     },
-    resultUrl: { type: String },
+    resultUrl: { type: String, default: null },
 }, { timestamps: true });
 const RequestModel = mongoose_1.default.model('Request', RequestSchema);
 exports.default = RequestModel;
