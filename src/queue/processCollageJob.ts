@@ -2,7 +2,7 @@
 import createCollage from '../controllers/collageCreator';
 import generateDownloadLink from '../objectStorage/getdownloadlink';
 import { randomUUID } from 'crypto';
-import uploadToLiara from '../objectStorage/uploadCollageToS3';
+import uploadFileToLiara from '../objectStorage/uploadCollageToS3';
 
 const processCollageJob = async (
   images: string[],
@@ -18,7 +18,7 @@ const processCollageJob = async (
   );
   const filename = `${randomUUID()}.jpg`;
 
-  await uploadToLiara(collageBuffer, filename);
+  await uploadFileToLiara(collageBuffer, filename);
   const url = await generateDownloadLink(filename);
 
   return { resultUrl: url };

@@ -4,7 +4,6 @@ import {
   ListObjectsV2Command,
   DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
-import cron from 'node-cron';
 import dotenv from 'dotenv';
 
 dotenv.config();
