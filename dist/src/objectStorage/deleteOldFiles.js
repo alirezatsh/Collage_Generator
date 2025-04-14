@@ -3,8 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteOldFiles = void 0;
+exports.deleteOldImages = deleteOldImages;
 const client_s3_1 = require("@aws-sdk/client-s3");
+const node_cron_1 = __importDefault(require("node-cron"));
 const dotenv_1 = __importDefault(require("dotenv"));
 dotenv_1.default.config();
 const client = new client_s3_1.S3Client({
@@ -15,50 +16,44 @@ const client = new client_s3_1.S3Client({
         secretAccessKey: process.env.LIARA_SECRET_KEY,
     },
 });
-const BUCKET_NAME = process.env.LIARA_BUCKET_NAME;
-const DAYS_OLD = 3;
-const getCurrentTimeInMillis = () => new Date().getTime();
-const isFileOld = (lastModified) => {
-    const currentTime = getCurrentTimeInMillis();
-    const fileTime = lastModified.getTime();
-    const timeDifference = currentTime - fileTime;
-    const daysDifference = timeDifference / (1000 * 3600 * 24);
-    return daysDifference > DAYS_OLD;
-};
-const deleteOldFiles = async () => {
-    let continuationToken = undefined;
+async function deleteOldImages() {
+    const limit = 7 * 24 * 60 * 60 * 1000;
+    const now = new Date().getTime();
+    const objToDel = [];
+    const params = {
+        Bucket: process.env.BUCKET,
+    };
     try {
-        const listParams = {
-            Bucket: BUCKET_NAME,
-        };
-        const listData = await client.send(new client_s3_1.ListObjectsV2Command(listParams));
-        console.log('Files before deletion:', listData);
-        do {
-            const params = {
-                Bucket: BUCKET_NAME,
-                ContinuationToken: continuationToken,
-            };
-            const data = await client.send(new client_s3_1.ListObjectsV2Command(params));
-            if (data.Contents) {
-                for (const file of data.Contents) {
-                    if (file.LastModified && isFileOld(file.LastModified)) {
-                        const deleteParams = {
-                            Bucket: BUCKET_NAME,
-                            Key: file.Key,
-                        };
-                        await client.send(new client_s3_1.DeleteObjectCommand(deleteParams));
-                        console.log(`File deleted: ${file.Key}`);
-                    }
+        const command = new client_s3_1.ListObjectsCommand(params);
+        const res = await client.send(command);
+        res.Contents?.forEach((file) => {
+            if (file.Key !== 'collage/results/') {
+                const fileLastModified = new Date(file.LastModified).getTime();
+                if (fileLastModified < now - limit) {
+                    objToDel.push({ Key: file.Key });
                 }
             }
-            continuationToken = data.NextContinuationToken;
-        } while (continuationToken);
-        console.log('Finished deleting old files.');
-        const postDeleteData = await client.send(new client_s3_1.ListObjectsV2Command(listParams));
-        console.log('Files after deletion:', postDeleteData);
+        });
+        if (objToDel.length === 0) {
+            console.log('No old file to delete');
+            return;
+        }
+        const delParams = {
+            Bucket: process.env.BUCKET,
+            Delete: {
+                Objects: objToDel,
+            },
+        };
+        const delCommand = new client_s3_1.DeleteObjectsCommand(delParams);
+        await client.send(delCommand);
+        console.log('Old images deleted successfully');
     }
-    catch (error) {
-        console.error('Error deleting old files:', error);
+    catch (err) {
+        console.log('Error deleting files:', err);
     }
-};
-exports.deleteOldFiles = deleteOldFiles;
+}
+node_cron_1.default.schedule('* * * * *', () => {
+    console.log('Running task to delete old images...');
+    deleteOldImages();
+});
+console.log('Cron job started...');

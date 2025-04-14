@@ -39,6 +39,12 @@ const cancelCollageJob = async (requestId: string): Promise<void> => {
       if (job.data.requestId === requestId) {
         await job.remove();
         console.log(`Job for request ${requestId} removed from queue`);
+
+        const request = await RequestModel.findById(requestId);
+        if (request) {
+          request.status = 'CANCELLED';
+          await request.save();
+        }
         break;
       }
     }

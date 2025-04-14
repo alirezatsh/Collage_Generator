@@ -17,7 +17,6 @@ app.get('/', (req: Request, res: Response) => {
 
 connectToDb();
 
-// Cron job to run the task every minute
 // cron.schedule('* * * * *', async () => {
 //   console.log('Running task to delete old files...');
 //   await deleteOldFiles();
