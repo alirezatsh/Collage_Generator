@@ -16,9 +16,8 @@ app.get('/', (req, res) => {
     res.send('Collage Generator API is running 🚀');
 });
 (0, mongodbConfig_1.default)();
-node_cron_1.default.schedule('0 0 * * *', async () => {
+node_cron_1.default.schedule('* * * * *', async () => {
     console.log('Running task to delete old files...');
     await (0, deleteOldFiles_1.deleteOldFiles)();
-    process.exit(0);
 });
 exports.default = app;

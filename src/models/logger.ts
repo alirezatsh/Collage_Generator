@@ -9,37 +9,34 @@ export interface ILog extends Document {
   duration?: number;
 }
 
-const logSchema: Schema = new Schema(
-  {
-    request: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: 'RequestModel',
-      required: true,
-    },
-    status: {
-      type: String,
-      enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'],
-      default: 'PENDING',
-    },
-    message: {
-      type: String,
-      required: true,
-    },
-    startTime: {
-      type: Date,
-      default: Date.now,
-    },
-    endTime: {
-      type: Date,
-      default: null,
-    },
-    duration: {
-      type: Number,
-      default: null,
-    },
+const logSchema: Schema = new Schema({
+  request: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'RequestModel',
+    required: true,
   },
-  { timestamps: true }
-);
+  message: {
+    type: String,
+    required: true,
+  },
+  startTime: {
+    type: Date,
+    default: Date.now,
+  },
+  endTime: {
+    type: Date,
+    default: null,
+  },
+  status: {
+    type: String,
+    enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'],
+    default: 'PENDING',
+  },
+  duration: {
+    type: Number,
+    default: null,
+  },
+});
 
 logSchema.pre('save', function (next) {
   if (this.endTime && this.startTime instanceof Date) {

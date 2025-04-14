@@ -3,6 +3,8 @@ import { Request, Response } from 'express';
 import RequestModel from '../models/request';
 import collageQueue from '../queue/collageQueue';
 import uploadFileToLiara from '../objectStorage/uploadImagesToS3';
+import Log from '../models/logger';
+import { logRequestStatus } from '../utils/loggerHelper';
 
 // create a collage job
 const createCollageJob = async (request: any): Promise<void> => {

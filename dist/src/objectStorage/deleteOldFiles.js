@@ -26,23 +26,36 @@ const isFileOld = (lastModified) => {
     return daysDifference > DAYS_OLD;
 };
 const deleteOldFiles = async () => {
+    let continuationToken = undefined;
     try {
-        const params = {
+        const listParams = {
             Bucket: BUCKET_NAME,
         };
-        const data = await client.send(new client_s3_1.ListObjectsV2Command(params));
-        if (data.Contents) {
-            for (const file of data.Contents) {
-                if (file.LastModified && isFileOld(file.LastModified)) {
-                    const deleteParams = {
-                        Bucket: BUCKET_NAME,
-                        Key: file.Key,
-                    };
-                    await client.send(new client_s3_1.DeleteObjectCommand(deleteParams));
-                    console.log(`File deleted: ${file.Key}`);
+        const listData = await client.send(new client_s3_1.ListObjectsV2Command(listParams));
+        console.log('Files before deletion:', listData);
+        do {
+            const params = {
+                Bucket: BUCKET_NAME,
+                ContinuationToken: continuationToken,
+            };
+            const data = await client.send(new client_s3_1.ListObjectsV2Command(params));
+            if (data.Contents) {
+                for (const file of data.Contents) {
+                    if (file.LastModified && isFileOld(file.LastModified)) {
+                        const deleteParams = {
+                            Bucket: BUCKET_NAME,
+                            Key: file.Key,
+                        };
+                        await client.send(new client_s3_1.DeleteObjectCommand(deleteParams));
+                        console.log(`File deleted: ${file.Key}`);
+                    }
                 }
             }
-        }
+            continuationToken = data.NextContinuationToken;
+        } while (continuationToken);
+        console.log('Finished deleting old files.');
+        const postDeleteData = await client.send(new client_s3_1.ListObjectsV2Command(listParams));
+        console.log('Files after deletion:', postDeleteData);
     }
     catch (error) {
         console.error('Error deleting old files:', error);

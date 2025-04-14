@@ -8,7 +8,8 @@ const processCollageJob = async (
   images: string[],
   collageType: 'horizontal' | 'vertical',
   borderSize: number,
-  borderColor: string
+  borderColor: string,
+  p0: (msg: any) => Promise<void>
 ): Promise<{ resultUrl: string }> => {
   const collageBuffer = await createCollage(
     images,
