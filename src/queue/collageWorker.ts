@@ -5,10 +5,6 @@ import processCollageJob from './processCollageJob';
 import RequestModel from '../models/request';
 import { logRequestStatus } from '../utils/loggerHelper';
 
-function sleep(ms: number) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 const handleCollageJob = async (job: Job) => {
   const { images, collageType, borderSize, backgroundColor, requestId } =
     job.data;
@@ -38,22 +34,20 @@ const handleCollageJob = async (job: Job) => {
     console.log(`🔹 [${status}] Job ${job.id}: ${message}`);
   };
 
-  try {
+  const checkCancellation = async () => {
     const request = await RequestModel.findById(requestId);
-    if (request && request.status === 'CANCELLED') {
-      await logStep('Job has been cancelled.', 'CANCELED');
-      throw new Error('Job was cancelled.');
+    if (request?.status === 'CANCELLED') {
+      await logStep('Job was cancelled.', 'CANCELED');
+      throw new Error('CANCELLED');
     }
+  };
 
-    await logStep('Started collage processing...', 'PROCESSING');
+  try {
+    await checkCancellation();
+    await logStep('Job started.', 'PROCESSING');
 
-    await sleep(15000);
-
-    const updatedRequest = await RequestModel.findById(requestId);
-    if (updatedRequest && updatedRequest.status === 'CANCELLED') {
-      await logStep('Job was cancelled during processing.', 'CANCELED');
-      throw new Error('Job was cancelled during processing.');
-    }
+    await logStep('Processing images...', 'PROCESSING');
+    await checkCancellation();
 
     const { resultUrl } = await processCollageJob(
       images,
@@ -61,10 +55,15 @@ const handleCollageJob = async (job: Job) => {
       borderSize,
       backgroundColor,
       async (msg: string) => {
+        await checkCancellation();
         await logStep(msg, 'PROCESSING');
       }
     );
 
+    await checkCancellation();
+    await logStep('Uploading final collage...', 'PROCESSING');
+
+    const updatedRequest = await RequestModel.findById(requestId);
     if (updatedRequest && updatedRequest.status !== 'CANCELLED') {
       updatedRequest.status = 'COMPLETED';
       updatedRequest.resultUrl = resultUrl;
@@ -75,6 +74,12 @@ const handleCollageJob = async (job: Job) => {
     return { resultUrl };
   } catch (err) {
     const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+
+    if (errorMsg === 'CANCELLED') {
+      console.log(`Job ${job.id} was cancelled by user.`);
+      return;
+    }
+
     await logStep(`Processing failed: ${errorMsg}`, 'FAILED');
     console.log(`Job ${job.id} failed! Error: ${errorMsg}`);
     throw err;
@@ -84,9 +89,9 @@ const handleCollageJob = async (job: Job) => {
 const collageWorker = new Worker('collageQueue', handleCollageJob, {
   connection: redisConfig,
   concurrency: 1,
-  lockDuration: 60000, // Set lock duration for job processing
-  stalledInterval: 30000, // Check for stalled jobs every 30 seconds
-  maxStalledCount: 2, // Max number of times a job can stall before being moved
+  lockDuration: 60000,
+  stalledInterval: 30000,
+  maxStalledCount: 2,
 });
 
 collageWorker.on('completed', (job, result) => {
@@ -95,6 +100,7 @@ collageWorker.on('completed', (job, result) => {
 
 collageWorker.on('failed', (job, err) => {
   const errorMsg = err instanceof Error ? err.message : 'Unknown error';
+  if (errorMsg === 'CANCELLED') return;
   console.log(`Job ${job?.id ?? 'unknown'} failed! Error: ${errorMsg}`);
 });
 
@@ -102,7 +108,6 @@ collageWorker.on('paused', async () => {
   console.log('Worker has been paused.');
 
   const pendingRequests = await RequestModel.find({ status: 'PROCESSING' });
-
   for (const req of pendingRequests) {
     req.status = 'CANCELLED';
     await req.save();
