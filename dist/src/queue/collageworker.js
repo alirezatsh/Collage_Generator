@@ -58,6 +58,10 @@ const handleCollageJob = async (job) => {
 };
 const collageWorker = new bullmq_1.Worker('collageQueue', handleCollageJob, {
     connection: redisConfig_1.default,
+    concurrency: 1,
+    lockDuration: 60000,
+    stalledInterval: 30000,
+    maxStalledCount: 2,
 });
 collageWorker.on('completed', (job, result) => {
     console.log(`Job ${job.id} completed! Result: ${JSON.stringify(result)}`);

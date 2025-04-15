@@ -7,5 +7,14 @@ const bullmq_1 = require("bullmq");
 const redisConfig_1 = __importDefault(require("../config/redisConfig"));
 const collageQueue = new bullmq_1.Queue('collageQueue', {
     connection: redisConfig_1.default,
+    defaultJobOptions: {
+        removeOnComplete: true,
+        removeOnFail: false,
+        attempts: 3,
+        backoff: {
+            type: 'exponential',
+            delay: 5000,
+        },
+    },
 });
 exports.default = collageQueue;

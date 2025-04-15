@@ -83,6 +83,10 @@ const handleCollageJob = async (job: Job) => {
 
 const collageWorker = new Worker('collageQueue', handleCollageJob, {
   connection: redisConfig,
+  concurrency: 1,
+  lockDuration: 60000, // Set lock duration for job processing
+  stalledInterval: 30000, // Check for stalled jobs every 30 seconds
+  maxStalledCount: 2, // Max number of times a job can stall before being moved
 });
 
 collageWorker.on('completed', (job, result) => {
