@@ -8,9 +8,9 @@ const getdownloadlink_1 = __importDefault(require("../objectStorage/getdownloadl
 const crypto_1 = require("crypto");
 const uploadCollageToS3_1 = __importDefault(require("../objectStorage/uploadCollageToS3"));
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-const processCollageJob = async (images, collageType, borderSize, borderColor, p0) => {
+const processCollageJob = async (images, collageType, borderSize, backgroundColor, p0) => {
     await sleep(15000);
-    const collageBuffer = await (0, collageCreator_1.default)(images, collageType, borderSize, borderColor);
+    const collageBuffer = await (0, collageCreator_1.default)(images, collageType, borderSize, backgroundColor);
     const filename = `${(0, crypto_1.randomUUID)()}.jpg`;
     await (0, uploadCollageToS3_1.default)(collageBuffer, filename);
     const url = await (0, getdownloadlink_1.default)(filename);
