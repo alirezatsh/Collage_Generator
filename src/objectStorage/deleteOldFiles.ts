@@ -4,7 +4,6 @@ import {
   ListObjectsCommand,
   DeleteObjectsCommand,
 } from '@aws-sdk/client-s3';
-import cron from 'node-cron';
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -24,7 +23,7 @@ export async function deleteOldImages() {
   const objToDel: { Key: string }[] = [];
 
   const params = {
-    Bucket: process.env.BUCKET!,
+    Bucket: process.env.LIARA_BUCKET_NAME!,
   };
 
   try {
@@ -32,10 +31,14 @@ export async function deleteOldImages() {
     const res = await client.send(command);
 
     res.Contents?.forEach((file) => {
-      if (file.Key !== 'collage/results/') {
+      const key = file.Key!;
+
+      const isRootLevel = !key.includes('/');
+
+      if (isRootLevel) {
         const fileLastModified = new Date(file.LastModified!).getTime();
         if (fileLastModified < now - limit) {
-          objToDel.push({ Key: file.Key! });
+          objToDel.push({ Key: key });
         }
       }
     });
@@ -46,7 +49,7 @@ export async function deleteOldImages() {
     }
 
     const delParams = {
-      Bucket: process.env.BUCKET!,
+      Bucket: process.env.LIARA_BUCKET_NAME!,
       Delete: {
         Objects: objToDel,
       },
@@ -60,10 +63,3 @@ export async function deleteOldImages() {
     console.log('Error deleting files:', err);
   }
 }
-
-cron.schedule('* * * * *', () => {
-  console.log('Running task to delete old images...');
-  deleteOldImages();
-});
-
-console.log('Cron job started...');
