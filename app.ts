@@ -1,7 +1,6 @@
-/* eslint-disable no-undef */
 import express, { Request, Response } from 'express';
-import connectToDb from './src/config/mongodbConfig';
-import imageRoutes from './src/routes/requestRoute';
+import requestRoutes from './src/routes/requestRoute';
+import logRoutes from './src/routes/logsRoute';
 import './src/queue/collageWorker';
 import cron from 'node-cron';
 import { deleteOldImages } from './src/objectStorage/deleteOldFiles';
@@ -9,15 +8,15 @@ import { deleteOldImages } from './src/objectStorage/deleteOldFiles';
 const app = express();
 
 app.use(express.json());
-app.use('/api', imageRoutes);
+
+app.use('/api', requestRoutes, logRoutes);
 
 app.get('/', (req: Request, res: Response) => {
-  res.send('Collage Generator API is running 🚀');
+  res.send('Collage Generator API is running');
 });
 
-connectToDb();
-
-cron.schedule('* * * * *', async () => {
+cron.schedule('0 0 * * *', async () => {
+  // eslint-disable-next-line no-undef
   console.log('Running task to delete old files...');
   await deleteOldImages();
 });

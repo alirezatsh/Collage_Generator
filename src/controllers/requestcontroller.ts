@@ -3,10 +3,7 @@ import { Request, Response } from 'express';
 import RequestModel from '../models/request';
 import collageQueue from '../queue/collageQueue';
 import uploadFileToLiara from '../objectStorage/uploadImagesToS3';
-import Log from '../models/logger';
-import { logRequestStatus } from '../utils/loggerHelper';
 
-// create a collage job
 const createCollageJob = async (request: any): Promise<void> => {
   try {
     const { images, collageType, borderSize, backgroundColor, resultUrl } =
@@ -30,7 +27,6 @@ const createCollageJob = async (request: any): Promise<void> => {
   }
 };
 
-// cancel a collagejob
 const cancelCollageJob = async (requestId: string): Promise<void> => {
   try {
     const jobs = await collageQueue.getJobs(['waiting', 'active', 'delayed']);
@@ -53,7 +49,6 @@ const cancelCollageJob = async (requestId: string): Promise<void> => {
   }
 };
 
-// upload images into liara bucket
 export const uploadImages = async (
   req: Request,
   res: Response
@@ -67,12 +62,18 @@ export const uploadImages = async (
       return;
     }
 
+    if (!collageType || !borderSize || !backgroundColor) {
+      res
+        .status(400)
+        .json({ message: 'Missing collage configuration parameters' });
+      return;
+    }
+
     const uploadedImages: string[] = [];
 
     for (const file of files) {
       const fileName = file.originalname;
       const fileBuffer = file.buffer;
-
       const uploadedUrl = await uploadFileToLiara(fileBuffer, fileName);
       uploadedImages.push(uploadedUrl);
     }
@@ -82,7 +83,7 @@ export const uploadImages = async (
       collageType,
       borderSize,
       backgroundColor,
-      status: 'PENDING',
+      status: 'PROCESSING',
     });
 
     await newRequest.save();
@@ -100,6 +101,7 @@ export const uploadImages = async (
       console.error(error.message);
       res.status(500).json({ message: 'Upload failed', error: error.message });
     } else {
+      console.error(error);
       res
         .status(500)
         .json({ message: 'Upload failed', error: 'An unknown error occurred' });
@@ -107,13 +109,17 @@ export const uploadImages = async (
   }
 };
 
-// get all requests
 export const getAllRequests = async (
   req: Request,
   res: Response
 ): Promise<void> => {
   try {
     const requests = await RequestModel.find();
+
+    if (requests.length === 0) {
+      res.status(404).json({ message: 'No requests found' });
+      return;
+    }
 
     const requestsWithResultUrl = requests.map((req) => ({
       ...req.toObject(),
@@ -126,10 +132,12 @@ export const getAllRequests = async (
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
+      console.error(error.message);
       res
         .status(500)
         .json({ message: 'Error fetching requests', error: error.message });
     } else {
+      console.error(error);
       res.status(500).json({
         message: 'Error fetching requests',
         error: 'An unknown error occurred',
@@ -138,7 +146,6 @@ export const getAllRequests = async (
   }
 };
 
-// get a single request base on id
 export const getCollageStatus = async (
   req: Request,
   res: Response
@@ -160,10 +167,12 @@ export const getCollageStatus = async (
     });
   } catch (error: unknown) {
     if (error instanceof Error) {
+      console.error(error.message);
       res
         .status(500)
         .json({ message: 'Error fetching status', error: error.message });
     } else {
+      console.error(error);
       res.status(500).json({
         message: 'Error fetching status',
         error: 'An unknown error occurred',
@@ -172,7 +181,6 @@ export const getCollageStatus = async (
   }
 };
 
-// cancel a collagerequest in pending status
 export const cancelCollageRequest = async (
   req: Request,
   res: Response
@@ -194,6 +202,11 @@ export const cancelCollageRequest = async (
       return;
     }
 
+    if (request.status === 'CANCELLED') {
+      res.status(400).json({ message: 'Request is already cancelled' });
+      return;
+    }
+
     request.status = 'CANCELLED';
     await request.save();
 
@@ -202,10 +215,12 @@ export const cancelCollageRequest = async (
     res.status(200).json({ message: 'Request cancelled successfully' });
   } catch (error: unknown) {
     if (error instanceof Error) {
+      console.error(error.message);
       res
         .status(500)
         .json({ message: 'Error cancelling request', error: error.message });
     } else {
+      console.error(error);
       res.status(500).json({
         message: 'Error cancelling request',
         error: 'An unknown error occurred',

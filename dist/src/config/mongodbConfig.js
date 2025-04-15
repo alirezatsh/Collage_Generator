@@ -10,16 +10,16 @@ const dbOptions = {
     maxPoolSize: 10,
 };
 const connectToDb = async () => {
+    if (!process.env.MONGODB_URI) {
+        throw new Error('MONGODB_URI is not defined in .env file!');
+    }
     try {
-        if (!process.env.MONGODB_URI) {
-            throw new Error(' MONGODB_URI is not defined in .env file!');
-        }
         await mongoose_1.default.connect(process.env.MONGODB_URI, dbOptions);
-        console.log(' MongoDB is connected successfully.');
+        console.log('MongoDB is connected successfully.');
     }
     catch (e) {
-        console.error(' MongoDB connection failed:', e);
-        process.exit(1);
+        console.error('MongoDB connection failed:', e);
+        throw e;
     }
 };
 exports.default = connectToDb;

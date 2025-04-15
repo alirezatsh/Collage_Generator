@@ -54,8 +54,8 @@ const logSchema = new mongoose_1.Schema({
     },
     status: {
         type: String,
-        enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'],
-        default: 'PENDING',
+        enum: ['PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'],
+        default: 'PROCESSING',
     },
     duration: {
         type: Number,

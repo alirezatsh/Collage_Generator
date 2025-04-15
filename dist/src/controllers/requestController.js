@@ -54,6 +54,12 @@ const uploadImages = async (req, res) => {
             res.status(400).json({ message: 'At least 2 images are required' });
             return;
         }
+        if (!collageType || !borderSize || !backgroundColor) {
+            res
+                .status(400)
+                .json({ message: 'Missing collage configuration parameters' });
+            return;
+        }
         const uploadedImages = [];
         for (const file of files) {
             const fileName = file.originalname;
@@ -66,7 +72,7 @@ const uploadImages = async (req, res) => {
             collageType,
             borderSize,
             backgroundColor,
-            status: 'PENDING',
+            status: 'PROCESSING',
         });
         await newRequest.save();
         await createCollageJob(newRequest);
@@ -83,6 +89,7 @@ const uploadImages = async (req, res) => {
             res.status(500).json({ message: 'Upload failed', error: error.message });
         }
         else {
+            console.error(error);
             res
                 .status(500)
                 .json({ message: 'Upload failed', error: 'An unknown error occurred' });
@@ -93,6 +100,10 @@ exports.uploadImages = uploadImages;
 const getAllRequests = async (req, res) => {
     try {
         const requests = await request_1.default.find();
+        if (requests.length === 0) {
+            res.status(404).json({ message: 'No requests found' });
+            return;
+        }
         const requestsWithResultUrl = requests.map((req) => ({
             ...req.toObject(),
             resultUrl: req.resultUrl,
@@ -104,11 +115,13 @@ const getAllRequests = async (req, res) => {
     }
     catch (error) {
         if (error instanceof Error) {
+            console.error(error.message);
             res
                 .status(500)
                 .json({ message: 'Error fetching requests', error: error.message });
         }
         else {
+            console.error(error);
             res.status(500).json({
                 message: 'Error fetching requests',
                 error: 'An unknown error occurred',
@@ -133,11 +146,13 @@ const getCollageStatus = async (req, res) => {
     }
     catch (error) {
         if (error instanceof Error) {
+            console.error(error.message);
             res
                 .status(500)
                 .json({ message: 'Error fetching status', error: error.message });
         }
         else {
+            console.error(error);
             res.status(500).json({
                 message: 'Error fetching status',
                 error: 'An unknown error occurred',
@@ -160,6 +175,10 @@ const cancelCollageRequest = async (req, res) => {
                 .json({ message: 'Cannot cancel completed or failed request' });
             return;
         }
+        if (request.status === 'CANCELLED') {
+            res.status(400).json({ message: 'Request is already cancelled' });
+            return;
+        }
         request.status = 'CANCELLED';
         await request.save();
         await cancelCollageJob(request._id);
@@ -167,11 +186,13 @@ const cancelCollageRequest = async (req, res) => {
     }
     catch (error) {
         if (error instanceof Error) {
+            console.error(error.message);
             res
                 .status(500)
                 .json({ message: 'Error cancelling request', error: error.message });
         }
         else {
+            console.error(error);
             res.status(500).json({
                 message: 'Error cancelling request',
                 error: 'An unknown error occurred',

@@ -2,7 +2,7 @@ import mongoose, { Schema, Document } from 'mongoose';
 
 export interface ILog extends Document {
   request: mongoose.Schema.Types.ObjectId;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELED';
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELED';
   message: string;
   startTime: Date;
   endTime?: Date;
@@ -29,8 +29,8 @@ const logSchema: Schema = new Schema({
   },
   status: {
     type: String,
-    enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'],
-    default: 'PENDING',
+    enum: ['PROCESSING', 'COMPLETED', 'FAILED', 'CANCELED'],
+    default: 'PROCESSING',
   },
   duration: {
     type: Number,

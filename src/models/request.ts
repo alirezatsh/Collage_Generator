@@ -5,7 +5,7 @@ export interface IRequest extends Document {
   collageType: 'horizontal' | 'vertical';
   borderSize: number;
   backgroundColor: string;
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELLED';
   resultUrl?: string;
 }
 
@@ -21,8 +21,8 @@ const RequestSchema: Schema = new Schema(
     backgroundColor: { type: String, default: '#FFFFFF' },
     status: {
       type: String,
-      enum: ['PENDING', 'PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'],
-      default: 'PENDING',
+      enum: ['PROCESSING', 'COMPLETED', 'FAILED', 'CANCELLED'],
+      default: 'PROCESSING',
     },
     resultUrl: { type: String, default: null },
   },

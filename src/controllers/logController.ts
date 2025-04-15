@@ -10,6 +10,13 @@ export const getLogsByRequestId = async (
   try {
     const logs = await Log.find({ request: requestId }).sort({ createdAt: -1 });
 
+    if (logs.length === 0) {
+      res
+        .status(404)
+        .json({ message: 'No logs found for the given request ID' });
+      return;
+    }
+
     res.status(200).json({
       message: 'Logs fetched successfully',
       data: logs,
@@ -31,6 +38,11 @@ export const getAllLogs = async (
 ): Promise<void> => {
   try {
     const logs = await Log.find().sort({ createdAt: -1 });
+
+    if (logs.length === 0) {
+      res.status(404).json({ message: 'No logs found' });
+      return;
+    }
 
     res.status(200).json({
       message: 'All logs fetched successfully',

@@ -11,7 +11,7 @@ const processCollageJob = async (
   images: string[],
   collageType: 'horizontal' | 'vertical',
   borderSize: number,
-  borderColor: string,
+  backgroundColor: string,
   p0: (msg: any) => Promise<void>
 ): Promise<{ resultUrl: string }> => {
   await sleep(15000);
@@ -20,7 +20,7 @@ const processCollageJob = async (
     images,
     collageType,
     borderSize,
-    borderColor
+    backgroundColor
   );
 
   const filename = `${randomUUID()}.jpg`;

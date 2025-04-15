@@ -1,4 +1,5 @@
 /* eslint-disable no-undef */
+/* eslint-disable no-useless-catch */
 import sharp from 'sharp';
 import axios from 'axios';
 
@@ -8,8 +9,6 @@ const createCollage = async (
   borderSize: number,
   backgroundColor: string
 ): Promise<Buffer> => {
-  const startTime = performance.now();
-
   try {
     const imageSize = 300;
 
@@ -67,13 +66,8 @@ const createCollage = async (
       .jpeg()
       .toBuffer();
 
-    const endTime = performance.now();
-    const elapsedTime = endTime - startTime;
-    console.log(`Collage creation took ${elapsedTime} ms`);
-
     return finalCollage;
   } catch (error) {
-    console.error('Error creating collage:', error);
     throw error;
   }
 };
