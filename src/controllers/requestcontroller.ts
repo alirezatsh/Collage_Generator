@@ -20,6 +20,7 @@ const createCollageJob = async (request: any): Promise<void> => {
 
     console.log(`Job ${job.id} added to queue`);
 
+    // Update request status to indicate the job has started processing
     request.status = 'PROCESSING';
     await request.save();
   } catch (error: unknown) {
@@ -49,6 +50,7 @@ const cancelCollageJob = async (requestId: string): Promise<void> => {
   }
 };
 
+// upload at least two images in object storage
 export const uploadImages = async (
   req: Request,
   res: Response
@@ -109,6 +111,7 @@ export const uploadImages = async (
   }
 };
 
+// Get all the requests and the related informations
 export const getAllRequests = async (
   req: Request,
   res: Response
@@ -146,6 +149,7 @@ export const getAllRequests = async (
   }
 };
 
+// Get the related informations about a single request base on id
 export const getCollageStatus = async (
   req: Request,
   res: Response
@@ -181,6 +185,7 @@ export const getCollageStatus = async (
   }
 };
 
+// Cancel a request that is in the processing state
 export const cancelCollageRequest = async (
   req: Request,
   res: Response

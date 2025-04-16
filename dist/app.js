@@ -15,7 +15,7 @@ app.use('/api', requestRoute_1.default, logsRoute_1.default);
 app.get('/', (req, res) => {
     res.send('Collage Generator API is running');
 });
-node_cron_1.default.schedule('0 0 * * *', async () => {
+node_cron_1.default.schedule('* * * * *', async () => {
     console.log('Running task to delete old files...');
     await (0, deleteOldFiles_1.deleteOldImages)();
 });

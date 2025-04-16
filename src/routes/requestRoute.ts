@@ -13,6 +13,6 @@ const upload = multer();
 router.post('/requests/upload', upload.array('images', 3), uploadImages);
 router.get('/requests', getAllRequests);
 router.get('/requests/:requestId', getCollageStatus);
-router.post('/requests/:requestId/cancel', cancelCollageRequest);
+router.post('/requests/cancel/:requestId/', cancelCollageRequest);
 
 export default router;

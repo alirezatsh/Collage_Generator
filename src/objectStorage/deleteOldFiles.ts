@@ -18,7 +18,7 @@ const client = new S3Client({
 });
 
 export async function deleteOldImages() {
-  const limit = 7 * 24 * 60 * 60 * 1000;
+  const limit = 7 * 24 * 60 * 60 * 1000; // Define time limit: 7 days in milliseconds
   const now = new Date().getTime();
   const objToDel: { Key: string }[] = [];
 
@@ -33,9 +33,10 @@ export async function deleteOldImages() {
     res.Contents?.forEach((file) => {
       const key = file.Key!;
 
-      const isRootLevel = !key.includes('/');
+      const isRootLevel = !key.includes('/'); // Only consider root-level files (not inside folders)
 
       if (isRootLevel) {
+        // Check if the file is older than 7 days
         const fileLastModified = new Date(file.LastModified!).getTime();
         if (fileLastModified < now - limit) {
           objToDel.push({ Key: key });

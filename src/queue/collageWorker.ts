@@ -49,6 +49,7 @@ const handleCollageJob = async (job: Job) => {
     await logStep('Processing images...', 'PROCESSING');
     await checkCancellation();
 
+    // Process the collage generation logic
     const { resultUrl } = await processCollageJob(
       images,
       collageType,
@@ -86,6 +87,7 @@ const handleCollageJob = async (job: Job) => {
   }
 };
 
+// Create a BullMQ worker to process jobs from 'collageQueue'
 const collageWorker = new Worker('collageQueue', handleCollageJob, {
   connection: redisConfig,
   concurrency: 1,
@@ -94,16 +96,19 @@ const collageWorker = new Worker('collageQueue', handleCollageJob, {
   maxStalledCount: 2,
 });
 
+// Handle job completion
 collageWorker.on('completed', (job, result) => {
   console.log(`Job ${job.id} completed! Result: ${JSON.stringify(result)}`);
 });
 
+// Handle job failure
 collageWorker.on('failed', (job, err) => {
   const errorMsg = err instanceof Error ? err.message : 'Unknown error';
   if (errorMsg === 'CANCELLED') return;
   console.log(`Job ${job?.id ?? 'unknown'} failed! Error: ${errorMsg}`);
 });
 
+// If the worker is paused, cancel all jobs marked as 'PROCESSING'
 collageWorker.on('paused', async () => {
   console.log('Worker has been paused.');
 

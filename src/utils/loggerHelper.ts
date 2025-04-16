@@ -7,7 +7,7 @@ export const logRequestStatus = async (
   p1: string,
   startTime: Date,
   endTime: Date | null,
-  status: 'PENDING' | 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELED',
+  status: 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELED',
   message: string
 ) => {
   const logEntry = new Log({

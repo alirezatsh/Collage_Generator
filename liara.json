@@ -1,8 +1,0 @@
-{
-    "platform": "node",
-    "port": 3000,
-    "platformConfig": {
-      "version": "22"
-    }
-  }
-  

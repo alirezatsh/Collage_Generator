@@ -35,7 +35,7 @@ const createCollage = async (
 
     const compositeImages = await Promise.all(
       images.map(async (img, index) => {
-        const originalBuffer = await axios
+        const originalBuffer = await axios // Download image as buffer using axios
           .get(img, { responseType: 'arraybuffer' })
           .then((res) => Buffer.from(res.data));
 

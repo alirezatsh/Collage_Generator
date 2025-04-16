@@ -8,6 +8,7 @@ export const getLogsByRequestId = async (
   const { requestId } = req.params;
 
   try {
+    // Fetch all logs from the database and sort them by creation time (newest first)
     const logs = await Log.find({ request: requestId }).sort({ createdAt: -1 });
 
     if (logs.length === 0) {
