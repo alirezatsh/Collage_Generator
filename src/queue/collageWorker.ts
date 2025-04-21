@@ -17,15 +17,7 @@ const handleCollageJob = async (job: Job) => {
   ) => {
     const now = new Date();
     try {
-      await logRequestStatus(
-        requestId,
-        'p0Value',
-        'p1Value',
-        startTime,
-        now,
-        status,
-        message
-      );
+      await logRequestStatus(requestId, startTime, now, status, message);
     } catch (err) {
       console.error(
         `Error while logging step: ${err instanceof Error ? err.message : 'Unknown error'}`

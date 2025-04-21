@@ -15,7 +15,7 @@ app.get('/', (req: Request, res: Response) => {
   res.send('Collage Generator API is running');
 });
 
-cron.schedule('0 0 * * *', async () => {
+cron.schedule('0 0 3/* * *', async () => {
   // eslint-disable-next-line no-undef
   console.log('Running task to delete old files...');
   await deleteOldImages();

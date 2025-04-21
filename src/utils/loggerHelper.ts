@@ -3,8 +3,6 @@ import mongoose from 'mongoose';
 
 export const logRequestStatus = async (
   requestId: mongoose.Schema.Types.ObjectId,
-  p0: string,
-  p1: string,
   startTime: Date,
   endTime: Date | null,
   status: 'PROCESSING' | 'COMPLETED' | 'FAILED' | 'CANCELED',

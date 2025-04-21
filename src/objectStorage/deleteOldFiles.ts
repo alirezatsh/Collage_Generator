@@ -2,7 +2,7 @@
 import {
   S3Client,
   ListObjectsCommand,
-  DeleteObjectsCommand,
+  DeleteObjectCommand,
 } from '@aws-sdk/client-s3';
 import dotenv from 'dotenv';
 
@@ -18,10 +18,6 @@ const client = new S3Client({
 });
 
 export async function deleteOldImages() {
-  const limit = 7 * 24 * 60 * 60 * 1000; // Define time limit: 7 days in milliseconds
-  const now = new Date().getTime();
-  const objToDel: { Key: string }[] = [];
-
   const params = {
     Bucket: process.env.LIARA_BUCKET_NAME!,
   };
@@ -30,37 +26,49 @@ export async function deleteOldImages() {
     const command = new ListObjectsCommand(params);
     const res = await client.send(command);
 
-    res.Contents?.forEach((file) => {
-      const key = file.Key!;
-
-      const isRootLevel = !key.includes('/'); // Only consider root-level files (not inside folders)
-
-      if (isRootLevel) {
-        // Check if the file is older than 7 days
-        const fileLastModified = new Date(file.LastModified!).getTime();
-        if (fileLastModified < now - limit) {
-          objToDel.push({ Key: key });
-        }
-      }
-    });
-
-    if (objToDel.length === 0) {
-      console.log('No old file to delete');
+    if (!res.Contents || res.Contents.length === 0) {
+      console.log('No files to delete.');
       return;
     }
 
-    const delParams = {
-      Bucket: process.env.LIARA_BUCKET_NAME!,
-      Delete: {
-        Objects: objToDel,
-      },
-    };
+    const rootFiles = res.Contents.filter((file) => !file.Key?.includes('/'));
 
-    const delCommand = new DeleteObjectsCommand(delParams);
-    await client.send(delCommand);
+    if (rootFiles.length === 0) {
+      console.log('No files in the root directory to delete.');
+      return;
+    }
 
-    console.log('Old images deleted successfully');
+    const sortedFiles = rootFiles.sort((a, b) => {
+      if (!a.LastModified || !b.LastModified) {
+        return 0;
+      }
+      return (
+        new Date(a.LastModified).getTime() - new Date(b.LastModified).getTime()
+      );
+    });
+
+    for (const file of sortedFiles) {
+      if (file.Key && file.LastModified) {
+        // const fileTimestamp = new Date(file.LastModified).getTime();
+
+        // const now = new Date().getTime();
+        // const sevenDaysInMs = 7 * 24 * 60 * 60 * 1000;
+        // if (now - fileTimestamp <= sevenDaysInMs) {
+        //   continue;
+        // }
+
+        const deleteParams = {
+          Bucket: process.env.LIARA_BUCKET_NAME!,
+          Key: file.Key,
+        };
+
+        const deleteCommand = new DeleteObjectCommand(deleteParams);
+        await client.send(deleteCommand);
+
+        console.log(`File deleted: ${file.Key}`);
+      }
+    }
   } catch (err) {
-    console.log('Error deleting files:', err);
+    console.error('Error deleting file:', err);
   }
 }
