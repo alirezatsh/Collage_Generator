@@ -2,22 +2,33 @@ version: '3.9'
 
 services:
   app:
-    build: .
+    image: node:18
     container_name: collage_app
-    ports:
-      - '3000:3000'
+    working_dir: /app
     env_file:
       - .env
-    depends_on:
-      - redis
+    ports:
+      - "3000:3000"
     volumes:
       - .:/app
-      - /app/node_modules
-    command: npm run dev
+    depends_on:
+      - redis
+    environment:
+      - HTTP_PROXY=
+      - HTTPS_PROXY=
+      - NO_PROXY=localhost,127.0.0.1
+    command: >
+      sh -c "
+      npm config delete proxy &&
+      npm config delete https-proxy &&
+      npm install --include=dev --no-cache &&
+      npm run build &&
+      node dist/server.js
+      "
 
   redis:
-    image: redis:alpine
+    image: redis:latest
     container_name: collage_redis
     restart: always
     ports:
-      - '6379:6379'
+      - "6379:6379"

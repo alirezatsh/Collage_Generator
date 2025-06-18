@@ -3,9 +3,9 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+exports.deleteOldImages = deleteOldImages;
 const client_s3_1 = require("@aws-sdk/client-s3");
 const dotenv_1 = __importDefault(require("dotenv"));
-const node_cron_1 = __importDefault(require("node-cron"));
 dotenv_1.default.config();
 const client = new client_s3_1.S3Client({
     region: 'default',
@@ -16,39 +16,40 @@ const client = new client_s3_1.S3Client({
     },
 });
 async function deleteOldImages() {
-    const objToDel = [];
     const params = {
         Bucket: process.env.LIARA_BUCKET_NAME,
     };
     try {
         const command = new client_s3_1.ListObjectsCommand(params);
         const res = await client.send(command);
-        for (const file of res.Contents || []) {
-            const key = file.Key;
-            const isRootLevel = !key.includes('/');
-            if (isRootLevel) {
-                objToDel.push({ Key: key });
-            }
-        }
-        if (objToDel.length === 0) {
-            console.log('No files to delete');
+        if (!res.Contents || res.Contents.length === 0) {
+            console.log('No files to delete.');
             return;
         }
-        const delParams = {
-            Bucket: process.env.LIARA_BUCKET_NAME,
-            Delete: {
-                Objects: objToDel,
-            },
-        };
-        const delCommand = new client_s3_1.DeleteObjectsCommand(delParams);
-        await client.send(delCommand);
-        console.log('Old images deleted successfully');
+        const rootFiles = res.Contents.filter((file) => !file.Key?.includes('/'));
+        if (rootFiles.length === 0) {
+            console.log('No files in the root directory to delete.');
+            return;
+        }
+        const sortedFiles = rootFiles.sort((a, b) => {
+            if (!a.LastModified || !b.LastModified) {
+                return 0;
+            }
+            return (new Date(a.LastModified).getTime() - new Date(b.LastModified).getTime());
+        });
+        for (const file of sortedFiles) {
+            if (file.Key && file.LastModified) {
+                const deleteParams = {
+                    Bucket: process.env.LIARA_BUCKET_NAME,
+                    Key: file.Key,
+                };
+                const deleteCommand = new client_s3_1.DeleteObjectCommand(deleteParams);
+                await client.send(deleteCommand);
+                console.log(`File deleted: ${file.Key}`);
+            }
+        }
     }
     catch (err) {
-        console.log('Error deleting files:', err);
+        console.error('Error deleting file:', err);
     }
 }
-node_cron_1.default.schedule('* * * * *', async () => {
-    console.log('Running task to delete old files...');
-    await deleteOldImages();
-});
